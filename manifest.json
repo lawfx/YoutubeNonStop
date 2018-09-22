@@ -1,6 +1,6 @@
 {
     "name": "YouTube Non-Stop",
-    "version": "0.2",
+    "version": "0.2.0",
     "description": "Kiss the annoying \"Continue watching?\" confirmation goodbye!",
     "permissions": ["declarativeContent"],
     "content_scripts": [
