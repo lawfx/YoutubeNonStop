@@ -2,9 +2,16 @@
     "name": "YouTube Non-Stop",
     "version": "0.1",
     "description": "Kiss the annoying \"Continue watching?\" confirmation goodbye!",
-    "permissions": ["activeTab", "declarativeContent", "storage"],
+    "permissions": ["declarativeContent"],
+    "content_scripts": [
+     {
+     "matches": ["https://www.youtube.com/*"],
+      "js": ["jquery-3.3.1.slim.min.js", "autoconfirm.js"],
+      "run_at": "document_end"
+     }
+    ],
     "background": {
-      "scripts": ["autoconfirm.js"],
+      "scripts": ["background.js"],
       "persistent": false
     },
     "page_action": {
