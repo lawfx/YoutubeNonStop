@@ -1,6 +1,6 @@
 {
-    "name": "YouTube Non-Stop",
-    "short_name": "YT Non-Stop",
+    "name": "YouTube NonStop",
+    "short_name": "YT NonStop",
     "version": "0.3.0",
     "description": "Kiss the annoying \"Continue watching?\" confirmation goodbye!",
     "permissions": ["declarativeContent"],
