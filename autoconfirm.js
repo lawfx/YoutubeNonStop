@@ -23,6 +23,7 @@ function hasPoppedAfterTimeThreshold(){
   return true;
 }
 
+//after testing seems like clicking the toast doesn't affect the dialog popping up, so just keeping it in here for completion's sake
 function tryClickPaperToast(parent){
   if(parent.find('paper-toast.paper-toast-open').find('#action-button').length){
     if(!hasPoppedAfterTimeThreshold()){
@@ -51,7 +52,7 @@ function tryClickPaperDialog(parent){
 function autoClicker() {
   if(window.location.pathname === '/watch'){
     var parent = $('ytd-popup-container');
-    tryClickPaperToast(parent);
+    //tryClickPaperToast(parent);
     tryClickPaperDialog(parent);
   }
 }
