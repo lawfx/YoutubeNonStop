@@ -1,7 +1,7 @@
 var ynsInterval = null;
 var ynsIntervalTimer = 1000;
 var clickTimeThreshold = 3000;
-var ynsTag = "[YouTube Non-Stop] ";
+var ynsTag = "[YouTube NonStop] ";
 var lastClickTime = null;
 
 window.onload=function(){
