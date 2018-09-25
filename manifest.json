@@ -1,13 +1,13 @@
 {
     "name": "YouTube NonStop",
     "short_name": "YT NonStop",
-    "version": "0.3.0",
+    "version": "0.4.0",
     "description": "Kiss the annoying \"Continue watching?\" confirmation goodbye!",
     "permissions": ["declarativeContent"],
     "content_scripts": [
      {
      "matches": ["https://www.youtube.com/*"],
-      "js": ["jquery-3.3.1.slim.min.js", "main.js"],
+      "js": ["jquery-3.3.1.slim.min.js", "autoconfirm.js"],
       "run_at": "document_end"
      }
     ],
