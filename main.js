@@ -9,7 +9,7 @@ window.onload=function(){
     var lastClickTime = null;
 
     lastClickTime = new Date().getTime();
-    //ynsInterval = setInterval(autoClicker, ynsIntervalTimer);
+    ynsInterval = setInterval(function() { getFromWorker("pathname"); }, ynsIntervalTimer);
     postMessage("Monitoring YouTube for confirmation popup...");
 
     function hasPoppedAfterTimeThreshold(){
@@ -34,7 +34,7 @@ window.onload=function(){
     function tryClickPaperDialog(parent){
       var paperDialog = parent.find("paper-dialog");
       if(paperDialog.length){
-        if(paperDialog.css("display") != "none"){
+        if(paperDialog.css("display") !== "none"){
           if(!hasPoppedAfterTimeThreshold()){
             return;
           }
@@ -47,15 +47,28 @@ window.onload=function(){
     }
 
     self.onmessage = function(e){
-      postMessage(e.data);
+      var msg = e.data;
+      if(msg.pathname){
+        getFromWorker("container");
+      }
+      else if(msg.container){
+        //todo see what to do with container
+        postMessage(e.data.container);
+      }
+      //postMessage(e.data);
     };
 
-    function autoClicker() {
-      if(window.location.pathname === "/watch"){
+    function getPathname() {
+      postMessage("pathname");
+      /*if(window.location.pathname === "/watch"){
         var parent = $("ytd-popup-container");
         //tryClickPaperToast(parent);
         tryClickPaperDialog(parent);
-      }
+      }*/
+    }
+
+    function getFromWorker(data){
+      postMessage(data);
     }`;
     var blob;
     try {
@@ -67,8 +80,14 @@ window.onload=function(){
         blob = blob.getBlob();
     }
     var worker = new Worker(URL.createObjectURL(blob));
-      console.log("test");
       worker.onmessage = function(e){
+        var msg = e.data;
+        if(msg === "pathname"){
+          worker.postMessage({ pathname : window.location.pathname });
+        }
+        else if(msg === "container"){
+          worker.postMessage({ container : $("ytd-popup-container").length });
+        }
         console.log(ynsTag + e.data);
       };
 
