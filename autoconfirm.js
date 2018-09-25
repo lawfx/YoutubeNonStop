@@ -56,7 +56,10 @@ window.onload=function(){
 
       worker.onmessage = function(e){
         if(e.data === "whip"){
-          tryClickPaperDialog();
+          if(window.location.pathname === "/watch"){
+            console.log(ynsTag + "Searching time" + new Date());
+            tryClickPaperDialog();
+          }
         }
         else{
           console.log(ynsTag + e.data);
