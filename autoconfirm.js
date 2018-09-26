@@ -23,8 +23,12 @@ function tryClickPaperDialog(){
         return;
       }
       if(paperDialog.find('#confirm-button').length){
-        paperDialog.find('#confirm-button').click();
-        console.debug(ynsTag + "Confirmed watching in dialog!");
+        if(document.hidden){
+          document.location.reload();
+        } else{
+          paperDialog.find('#confirm-button').click();
+          console.debug(ynsTag + "Confirmed watching in dialog!");
+        }
       }
     }
   }
