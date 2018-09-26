@@ -33,10 +33,9 @@ function tryClickPaperDialog(){
 window.onload=function(){
   if (typeof(Worker) !== "undefined") {
 
-    var response = `var ynsInterval = null;
-    var ynsIntervalTimer = 1000;
+    var response = `var ynsIntervalTimer = 1000;
 
-    ynsInterval = setInterval(whipWorker, ynsIntervalTimer);
+    setInterval(whipWorker, ynsIntervalTimer);
     postMessage("Monitoring YouTube for confirmation popup...");
 
     function whipWorker(){
@@ -57,7 +56,6 @@ window.onload=function(){
       worker.onmessage = function(e){
         if(e.data === "whip"){
           if(window.location.pathname === "/watch"){
-            console.log(ynsTag + "Searching time" + new Date());
             tryClickPaperDialog();
           }
         }
