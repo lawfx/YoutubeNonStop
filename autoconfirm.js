@@ -77,7 +77,7 @@ window.onload=function(){
     var response = `var ynsIntervalTimer = 1000;
 
     setInterval(whipWorker, ynsIntervalTimer);
-    postMessage("Monitoring YouTube for confirmation popup...");
+    postMessage(new Date() + "Monitoring YouTube for confirmation popup...");
 
     function whipWorker(){
       postMessage("whip");
