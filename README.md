@@ -1,7 +1,7 @@
 # YoutubeNonStop
 Autoclicker for Youtube's latest "feature" - Video paused. Continue watching?
 
-You can find the extension in the Chrome Web Store [here](https://chrome.google.com/webstore/detail/youtube-nonstop/nlkaejimjacpillmajjnopmpbkbnocid).
+You can find the extension in the Chrome Web Store <a href="https://chrome.google.com/webstore/detail/youtube-nonstop/nlkaejimjacpillmajjnopmpbkbnocid" target="_blank">here</a>.
 
 It is developed based on the assumption that if we get a popup but we haven't interacted with YouTube for the past 3 seconds, it's the "Continue watching?" confirmation.
 
