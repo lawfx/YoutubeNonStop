@@ -1,5 +1,13 @@
 var ynsTag = "[Youtube NonStop] ";
-var clickTimeThreshold = 3000;
+
+chrome.runtime.onMessage.addListener(
+  function(request, sender, sendResponse) {
+    if (request.gimme === "duration"){
+      var duration = $(".ytp-time-duration").first().text();
+      sendResponse({ duration : duration, tabid : request.tabid });
+    }
+  });
+/*var clickTimeThreshold = 3000;
 var lastClickTime = new Date().getTime();
 var lastVideo = '';
 var timeStartedVideo = 0;
@@ -115,3 +123,4 @@ window.onload=function(){
       console.error(ynsTag + "Sorry, your browser doesn't support Web Workers! :/");
   }
 }
+*/
