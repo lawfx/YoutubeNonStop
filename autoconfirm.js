@@ -1,72 +1,20 @@
-var ynsTag = "[Youtube NonStop] ";
-//trigger popup
+//trigger popup example
 //https://www.youtube.com/watch?v=6gN0LFriw9E&t=5769
-console.log(ynsTag + "Monitoring YouTube for confimation popup...");
 
+var ynsTag = "[Youtube NonStop] ";
+var clickTimeThreshold = 3000;
 var lastClickTime = new Date().getTime();
+var fakeClick = false;
+var confirmActed = 0;
+var videoActed = 0;
 
 $(document).click(function() {
-  lastClickTime = new Date().getTime();
-  chrome.extension.sendMessage({ inform : "clicked" }, function(response) {});
-  setTimeout(function(){
-    if(new Date().getTime() - lastClickTime >= 2000){
-      chrome.extension.sendMessage({ inform : "idle" }, function(response) {});
-    }
-  }, 3000);
-});
-
-chrome.runtime.onMessage.addListener(
-  function(request, sender, sendResponse) {
-    if (request.gimme === "times"){
-      var duration = $(".ytp-time-duration").first().text();
-      var current = $(".ytp-time-current").first().text();
-      var canBeProcessed = true;
-      sendResponse({current : current, duration : duration, tabid : request.tabid });
-      setTimeout(function(){
-        if(new Date().getTime() - lastClickTime >= 2000){
-          chrome.extension.sendMessage({ inform : "idle" }, function(response) {});
-        }
-      }, 3000);
-    }
-    else if(request.gimme === "interacted"){
-      var canBeProcessed = true;
-      if(new Date().getTime() - lastClickTime < 3000){
-        canBeProcessed = false;
-      }
-      sendResponse({ canBeProcessed : canBeProcessed, tabid : request.tabid });
-    }
-    else if(request.gimme === "click"){
-      $("video").click();
-      setTimeout(function(){
-        if(new Date().getTime() - lastClickTime >= 2000){
-          chrome.extension.sendMessage({ inform : "idle" }, function(response) {});
-        }
-      }, 1500);
-    }
-    else if(request.gimme === "confirm"){
-      tryClickPaperDialog();
-    }
-  });
-
-  function tryClickPaperDialog(){
-    var paperDialog = $('ytd-popup-container').find('paper-dialog');
-    if(paperDialog.length){
-      if(paperDialog.css('display') != 'none'){
-        if(paperDialog.find('#confirm-button').length){
-          paperDialog.find('#confirm-button').click();
-          console.debug(ynsTag + "Confirmed watching in dialog!");
-        }
-      }
-    }
+  if(!fakeClick){
+    lastClickTime = new Date().getTime();
   }
-/*var clickTimeThreshold = 3000;
-var lastClickTime = new Date().getTime();
-var lastVideo = '';
-var timeStartedVideo = 0;
-var extraTime = 0;
-
-$(document).click(function() {
-  lastClickTime = new Date().getTime();
+  else{
+    fakeClick = false;
+  }
 });
 
 function hasPoppedAfterTimeThreshold(){
@@ -86,93 +34,63 @@ function tryClickPaperDialog(){
         return;
       }
       if(paperDialog.find('#confirm-button').length){
-        if(document.hidden){
-          checkForTimeStamp("replace");
-        }
-        else{
-          paperDialog.find('#confirm-button').click();
-          console.debug(ynsTag + "Confirmed watching in dialog!");
-        }
+        fakeClick = true;
+        paperDialog.find('#confirm-button').click();
+        confirmActed = new Date().getTime();
+        console.debug(ynsTag + "Confirmed watching in dialog!");
       }
     }
   }
 }
 
-function checkForTimeStamp(operation){
-  var url = window.location.origin + window.location.pathname;
-  var foundTimestamp = false;
-  window.location.search.split("&").forEach(function(curr, index){
-    if(index === 0){
-      curr = curr.split("?")[1];
+function tryClickPausedVideo(){
+  if($('.html5-video-player').hasClass("paused-mode")){
+    if(!hasPoppedAfterTimeThreshold()){
+      return;
     }
-    var splits = curr.split("=");
-    if(splits[0] === "t"){
-      foundTimestamp = true;
-      if(operation === "get"){
-        extraTime = parseInt(splits[1]);
-      }
-      else if(operation === "replace"){
-        url += "&t=" + Math.floor((new Date() - timeStartedVideo) / 1000 + extraTime);
-      }
-    }
-    else if(operation === "replace"){
-      if(index === 0){
-        url += "?";
-      }
-      url += "&"+ curr;
-    }
-  });
-  if(operation === "replace"){
-    if(!foundTimestamp){
-      url += "&t=" + Math.floor((new Date() - timeStartedVideo) / 1000 + extraTime);
-    }
-    console.debug(ynsTag + "Cannot confirm watching because tab is hidden, reloading as " + url);
-    window.location.href = url;
+    fakeClick = true;
+    $("video").click();
+    videoActed = new Date().getTime();
+    console.debug(ynsTag + "Detected paused video and clicked it to continue!");
   }
 }
 
-window.onload=function(){
-  if (typeof(Worker) !== "undefined") {
+if (typeof(Worker) !== "undefined") {
 
-    var response = `var ynsIntervalTimer = 1000;
+  var response = `var ynsIntervalTimer = 500;
 
-    setInterval(whipWorker, ynsIntervalTimer);
-    postMessage(new Date() + "Monitoring YouTube for confirmation popup...");
+  setInterval(whipWorker, ynsIntervalTimer);
+  postMessage("Monitoring YouTube for confirmation popup...");
 
-    function whipWorker(){
-      postMessage("whip");
-    }`;
+  function whipWorker(){
+    postMessage("whip");
+  }`;
 
-    var blob;
-    try {
-        blob = new Blob([response], {type: 'application/javascript'});
-    } catch (e) { // Backwards-compatibility
-        blob = new BlobBuilder();
-        blob.append(response);
-        blob = blob.getBlob();
-    }
-
-    var worker = new Worker(URL.createObjectURL(blob));
-
-      worker.onmessage = function(e){
-        if(e.data === "whip"){
-          if(window.location.pathname === "/watch"){
-            if(lastVideo !== window.location.href){
-              extraTime = 0;
-              checkForTimeStamp("get");
-              lastVideo = window.location.href;
-              timeStartedVideo = new Date();
-            }
-            tryClickPaperDialog();
-          }
-        }
-        else{
-          console.log(ynsTag + e.data);
-        }
-      };
+  var blob;
+  try {
+      blob = new Blob([response], {type: 'application/javascript'});
+  } catch (e) { // Backwards-compatibility
+      blob = new BlobBuilder();
+      blob.append(response);
+      blob = blob.getBlob();
   }
-  else {
-      console.error(ynsTag + "Sorry, your browser doesn't support Web Workers! :/");
-  }
+
+  var worker = new Worker(URL.createObjectURL(blob));
+
+    worker.onmessage = function(e){
+      if(e.data === "whip"){
+        if(new Date().getTime() - confirmActed >= 2000){
+          tryClickPaperDialog();
+        }
+        if(new Date().getTime() - videoActed >= 2000){
+          tryClickPausedVideo();
+        }
+      }
+      else{
+        console.log(ynsTag + e.data);
+      }
+    };
 }
-*/
+else {
+    console.error(ynsTag + "Sorry, your browser doesn't support Web Workers! :/");
+}
