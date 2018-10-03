@@ -82,7 +82,7 @@ if (typeof(Worker) !== "undefined") {
         if(new Date().getTime() - confirmActed >= 2000){
           tryClickPaperDialog();
         }
-        if(new Date().getTime() - videoActed >= 2000){
+        if(new Date().getTime() - videoActed >= 2000 && new Date().getTime() - confirmActed >= 2000){
           tryClickPausedVideo();
         }
       }
