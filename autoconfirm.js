@@ -17,6 +17,10 @@ $(document).click(function() {
   }
 });
 
+$(document).keydown(function() {
+  lastClickTime = new Date().getTime();
+});
+
 function hasPoppedAfterTimeThreshold(){
   var currTime = new Date().getTime();
   if(currTime - lastClickTime <= clickTimeThreshold){
