@@ -60,7 +60,7 @@ if (typeof(Worker) !== "undefined") {
   var response = `var ynsIntervalTimer = 500;
 
   setInterval(whipWorker, ynsIntervalTimer);
-  postMessage("Monitoring YouTube for confirmation popup...");
+  postMessage("Monitoring YouTube for "Confirm watching?" action...");
 
   function whipWorker(){
     postMessage("whip");
