@@ -7,10 +7,12 @@ var lastClickTime = new Date().getTime();
 var fakeClick = false;
 var confirmActed = 0;
 var videoActed = 0;
+var isPausedManually = false;
 
 $(document).click(function() {
   if(!fakeClick){
     lastClickTime = new Date().getTime();
+    setTimeout(checkIfPaused, 1000);
   }
   else{
     fakeClick = false;
@@ -19,11 +21,21 @@ $(document).click(function() {
 
 $(document).keydown(function() {
   lastClickTime = new Date().getTime();
+  setTimeout(checkIfPaused, 1000);
 });
+
+function checkIfPaused(){
+  if($('.html5-video-player').hasClass("paused-mode")){
+    isPausedManually = true;
+  }
+  else{
+    isPausedManually = false;
+  }
+}
 
 function hasPoppedAfterTimeThreshold(){
   var currTime = new Date().getTime();
-  if(currTime - lastClickTime <= clickTimeThreshold){
+  if(currTime - lastClickTime <= clickTimeThreshold || isPausedManually){
     lastClickTime = new Date().getTime();
     return false;
   }
