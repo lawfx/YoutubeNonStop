@@ -6,7 +6,7 @@
     "permissions": ["declarativeContent"],
     "content_scripts": [
      {
-     "matches": ["https://www.youtube.com/*"],
+     "matches": ["https://www.youtube.com/*","https://music.youtube.com/*"],
       "js": ["jquery-3.3.1.slim.min.js", "autoconfirm.js"],
       "run_at": "document_end"
      }
