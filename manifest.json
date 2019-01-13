@@ -1,33 +1,33 @@
 {
     "name": "YouTube NonStop",
     "short_name": "YT NonStop",
-    "version": "0.4.2",
+    "version": "0.5.0",
     "description": "Kiss the annoying \"Video paused. Continue watching?\" confirmation goodbye!",
     "permissions": ["declarativeContent"],
     "content_scripts": [
      {
-     "matches": ["https://www.youtube.com/*"],
-      "js": ["jquery-3.3.1.slim.min.js", "autoconfirm.js"],
-      "run_at": "document_end"
+        "matches": ["https://www.youtube.com/*", "https://music.youtube.com/*"],
+        "js": ["jquery-3.3.1.slim.min.js", "autoconfirm.js"],
+        "run_at": "document_end"
      }
     ],
-    "background": {
-      "scripts": ["background.js"]
+    "background":{
+        "scripts": ["background.js"]
     },
     "page_action": {
-     "default_popup": "popup.html",
-     "default_icon": {
-        "16": "images/yns16.png",
-        "32": "images/yns32.png",
-        "48": "images/yns48.png",
-        "128": "images/yns128.png"
-      }
+        "default_popup": "popup.html",
+        "default_icon": {
+            "16": "images/yns16.png",
+            "32": "images/yns32.png",
+            "48": "images/yns48.png",
+            "128": "images/yns128.png"
+        }
    },
    "icons": {
-      "16": "images/yns16.png",
-      "32": "images/yns32.png",
-      "48": "images/yns48.png",
-      "128": "images/yns128.png"
+       "16": "images/yns16.png",
+       "32": "images/yns32.png",
+       "48": "images/yns48.png",
+       "128": "images/yns128.png"
     },
     "manifest_version": 2
-  }
+}

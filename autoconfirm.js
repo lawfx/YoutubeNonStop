@@ -1,112 +1,177 @@
-//trigger popup example
-//https://www.youtube.com/watch?v=6gN0LFriw9E&t=5769
+//https://www.youtube.com/watch?v=XukwvHZTqPk&t=5769 triggers the popup - link might be dead after a while
 
-var ynsTag = "[Youtube NonStop] ";
-var clickTimeThreshold = 3000;
-var lastClickTime = new Date().getTime();
-var fakeClick = false;
-var confirmActed = 0;
-var videoActed = 0;
-var isPausedManually = false;
+const ynsTag = "[Youtube NonStop]";
+const considerIdleTime = 3000; //time to pass without interaction to consider the page idle
+const resetActedTime = 1000; //time to pass to reconsider unpausing again
+const checkIfPausedTime = 1000; //timeout time to check if the video is paused after interaction
+const tryClickTime = 500; //timeout time to make sure the unpausing takes place after events are fired
+let lastClickTime = new Date().getTime();
+let fakeClick = false;
+let dialogActed = false;
+let videoActed = false;
+let observingVideo = false;
+let observingDialog = false;
+let isPausedManually = false;
+const videoPlayerElement = '.html5-video-player';
+let dialogElement;
+let unpauseElement;
+if(window.location.hostname === "music.youtube.com"){
+    unpauseElement = ".ytp-unmute";
+    dialogElement = 'ytmusic-popup-container';
+}
+else{
+    unpauseElement = "video";
+    dialogElement = 'ytd-popup-container';
+}
+dialogElement += " paper-dialog";
+let informedVideo = false;
+let informedDialog = false;
+const MutationObserver = window.MutationObserver || window.WebKitMutationObserver;
+
+function log(message){
+    console.log(ynsTag + " " + message);
+}
+
+function debug(message){
+    console.debug(ynsTag + " " + message);
+}
+
+function getTimestamp(){
+    let dt = new Date();
+    let time = dt.getHours() + ":" + dt.getMinutes() + ":" + dt.getSeconds();
+    return time;
+}
+
+log("Monitoring YouTube for 'Confirm watching?' action...");
 
 $(document).click(function() {
-  if(!fakeClick){
-    lastClickTime = new Date().getTime();
-    setTimeout(checkIfPaused, 1000);
-  }
-  else{
-    fakeClick = false;
-  }
+    if(!fakeClick){
+        lastClickTime = new Date().getTime();
+        isPausedManually = true;
+        setTimeout(checkIfPaused, checkIfPausedTime);
+    }
+    else{
+        fakeClick = false;
+    }
 });
 
 $(document).keydown(function() {
-  lastClickTime = new Date().getTime();
-  setTimeout(checkIfPaused, 1000);
+    lastClickTime = new Date().getTime();
+    isPausedManually = true;
+    setTimeout(checkIfPaused, checkIfPausedTime);
 });
 
 function checkIfPaused(){
-  if($('.html5-video-player').hasClass("paused-mode")){
-    isPausedManually = true;
-  }
-  else{
-    isPausedManually = false;
-  }
+    if(!$(videoPlayerElement).hasClass("paused-mode")){
+        isPausedManually = false;
+    }
 }
 
 function hasPoppedAfterTimeThreshold(){
-  var currTime = new Date().getTime();
-  if(currTime - lastClickTime <= clickTimeThreshold || isPausedManually){
-    lastClickTime = new Date().getTime();
-    return false;
-  }
-  return true;
+    var currTime = new Date().getTime();
+    if(currTime - lastClickTime <= considerIdleTime || isPausedManually){
+        lastClickTime = new Date().getTime();
+        return false;
+    }
+    return true;
 }
 
-function tryClickPaperDialog(){
-  var paperDialog = $('ytd-popup-container').find('paper-dialog');
-  if(paperDialog.length){
-    if(paperDialog.css('display') != 'none'){
-      if(!hasPoppedAfterTimeThreshold()){
-        return;
-      }
-      if(paperDialog.find('#confirm-button').length){
+let videoPlayerObserver = new MutationObserver(function(mutations, observer) {
+    if(document.hidden){
+        tryClickVideoPlayer();
+    }
+    else{
+    	setTimeout(tryClickVideoPlayer, tryClickTime);
+    }
+});
+
+let dialogObserver = new MutationObserver(function(mutations, observer) {
+	setTimeout(tryClickDialog, tryClickTime);
+});
+
+let documentObserver = new MutationObserver(function(mutations, observer){
+    if(!observingVideo){
+        videoPlayerObserver.disconnect();
+        if(tryObserveVideoPlayer()){
+            observingVideo = true;
+        }
+    }
+    if(!observingDialog){
+        dialogObserver.disconnect();
+        if(tryObserveDialog()){
+            observingDialog = true;
+        }
+    }
+    if(observingVideo && observingDialog){
+        documentObserver.disconnect();
+    }
+});
+
+documentObserver.observe($(document)[0], {
+    childList: true,
+    subtree: true
+});
+
+function tryObserveVideoPlayer(){
+    if($(videoPlayerElement).length){
+        videoPlayerObserver.observe($(videoPlayerElement)[0], {
+            attributeFilter: ["class"]
+        });
+        debug("Observing video player!");
+        return true;
+    }
+    else{
+        if(!informedVideo){
+            debug("Searching for video player...");
+            informedVideo = true;
+        }
+        return false;
+    }
+}
+
+function tryObserveDialog(){
+    if($(dialogElement).length){
+        dialogObserver.observe($(dialogElement)[0], {
+            attributeFilter: ["style"]
+        });
+        debug("Observing confirm dialog!");
+        return true;
+    }
+    else{
+        if(!informedDialog){
+            debug("Searching for confirm dialog...");
+            informedDialog = true;
+        }
+        return false;
+    }
+}
+
+function tryClickVideoPlayer(){
+	if($(videoPlayerElement).hasClass("paused-mode") && !videoActed){
+        if(!hasPoppedAfterTimeThreshold()){
+            return;
+        }
         fakeClick = true;
-        paperDialog.find('#confirm-button').click();
-        confirmActed = new Date().getTime();
-        console.debug(ynsTag + "Confirmed watching in dialog!");
-      }
+        $(unpauseElement).click();
+        videoActed = true;
+        setTimeout(function(){
+            videoActed = false;
+        }, resetActedTime);
+        debug(getTimestamp() + " " + $("head title").html() + " Detected paused video and clicked it to continue!");
     }
-  }
 }
 
-function tryClickPausedVideo(){
-  if($('.html5-video-player').hasClass("paused-mode")){
-    if(!hasPoppedAfterTimeThreshold()){
-      return;
+function tryClickDialog(){
+	if($(dialogElement).css('display') !== 'none' && !dialogActed){
+        if(!hasPoppedAfterTimeThreshold()){
+            return;
+        }
+        fakeClick = true;
+        $(dialogElement).find("yt-button-renderer[dialog-confirm]").click();
+        dialogActed = true;
+        setTimeout(function(){
+            dialogActed = false;
+        }, resetActedTime);
+        debug(getTimestamp() + " " + $("head title").html() + " Confirmed watching in dialog!");
     }
-    fakeClick = true;
-    $("video").click();
-    videoActed = new Date().getTime();
-    console.debug(ynsTag + "Detected paused video and clicked it to continue!");
-  }
-}
-
-if (typeof(Worker) !== "undefined") {
-
-  var response = `var ynsIntervalTimer = 500;
-
-  setInterval(whipWorker, ynsIntervalTimer);
-  postMessage("Monitoring YouTube for 'Confirm watching?' action...");
-
-  function whipWorker(){
-    postMessage("whip");
-  }`;
-
-  var blob;
-  try {
-      blob = new Blob([response], {type: 'application/javascript'});
-  } catch (e) { // Backwards-compatibility
-      blob = new BlobBuilder();
-      blob.append(response);
-      blob = blob.getBlob();
-  }
-
-  var worker = new Worker(URL.createObjectURL(blob));
-
-    worker.onmessage = function(e){
-      if(e.data === "whip"){
-        if(new Date().getTime() - confirmActed >= 2000){
-          tryClickPaperDialog();
-        }
-        if(new Date().getTime() - videoActed >= 2000 && new Date().getTime() - confirmActed >= 2000){
-          tryClickPausedVideo();
-        }
-      }
-      else{
-        console.log(ynsTag + e.data);
-      }
-    };
-}
-else {
-    console.error(ynsTag + "Sorry, your browser doesn't support Web Workers! :/");
 }
