@@ -7,6 +7,8 @@ Available for:
 
 [Firefox](https://addons.mozilla.org/en-US/firefox/addon/youtube-nonstop/)
 
+Opera...eventually...awaiting moderation for over 2 months now...
+
 ---
 
 If you want to load the extension by yourself in your browser without installing it from store or Google suddenly decides to take action against it, follow the instructions below:
