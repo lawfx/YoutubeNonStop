@@ -1,7 +1,7 @@
 {
     "name": "YouTube NonStop",
     "short_name": "YT NonStop",
-    "version": "0.5.1",
+    "version": "0.5.2",
     "description": "Kiss the annoying \"Video paused. Continue watching?\" confirmation goodbye!",
     "permissions": ["declarativeContent"],
     "content_scripts": [

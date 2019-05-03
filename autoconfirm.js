@@ -1,6 +1,6 @@
 //https://www.youtube.com/watch?v=XukwvHZTqPk&t=5769 triggers the popup - link might be dead after a while
 
-const ynsTag = "[Youtube NonStop v0.5.1]";
+const ynsTag = "[Youtube NonStop v0.5.2]";
 const considerIdleTime = 3000; //time to pass without interaction to consider the page idle
 const resetActedTime = 1000; //time to pass to reconsider unpausing again
 const checkIfPausedTime = 1000; //timeout time to check if the video is paused after interaction
@@ -53,6 +53,10 @@ $(document).click(function() {
     else{
         fakeClick = false;
     }
+});
+
+$(document).mousedown(function(){
+    lastClickTime = new Date().getTime();
 });
 
 $(document).keydown(function() {
