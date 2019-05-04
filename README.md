@@ -3,7 +3,8 @@
 
 Autoclicker for Youtube's latest "feature" - Video paused. Continue watching?
 
-Available for: 
+Available for:
+
 [Chrome](https://chrome.google.com/webstore/detail/youtube-nonstop/nlkaejimjacpillmajjnopmpbkbnocid) <a href="https://chrome.google.com/webstore/detail/youtube-nonstop/nlkaejimjacpillmajjnopmpbkbnocid">
 <img src="https://github.com/lawfx/YoutubeNonStop/blob/master/images/chrome_logo.png" width="25" height="25" /></a>
 
