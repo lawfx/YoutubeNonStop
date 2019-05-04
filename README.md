@@ -1,11 +1,21 @@
 # YoutubeNonStop
+![YouTube NonStop Logo](https://github.com/lawfx/YoutubeNonStop/blob/master/images/yns128.png)
+
 Autoclicker for Youtube's latest "feature" - Video paused. Continue watching?
 
-Available for: 
+Available for:
 
-[Chrome](https://chrome.google.com/webstore/detail/youtube-nonstop/nlkaejimjacpillmajjnopmpbkbnocid)
+[Chrome](https://chrome.google.com/webstore/detail/youtube-nonstop/nlkaejimjacpillmajjnopmpbkbnocid) <a href="https://chrome.google.com/webstore/detail/youtube-nonstop/nlkaejimjacpillmajjnopmpbkbnocid">
+<img src="https://github.com/lawfx/YoutubeNonStop/blob/master/images/chrome_logo.png" width="25" height="25" /></a>
 
-[Firefox](https://addons.mozilla.org/en-US/firefox/addon/youtube-nonstop/)
+[Firefox](https://addons.mozilla.org/en-US/firefox/addon/youtube-nonstop/) <a href="https://addons.mozilla.org/en-US/firefox/addon/youtube-nonstop/">
+<img src="https://github.com/lawfx/YoutubeNonStop/blob/master/images/firefox_logo.png" width="25" height="25" /></a>
+
+Opera...eventually...I hope...who knows...awaiting moderation for over a million years now...
+
+If you feel like supporting this project you can buy me a :coffee: or a :beer: :
+
+[![](https://github.com/lawfx/YoutubeNonStop/blob/master/images/donate-paypal.png)](https://www.paypal.me/ioannounikos)
 
 ---
 
