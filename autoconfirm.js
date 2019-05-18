@@ -44,7 +44,7 @@ function getTimestamp(){
 
 log("Monitoring YouTube for 'Confirm watching?' action...");
 
-$(document).click(function() {
+document.addEventListener("click", function() {
     if(!fakeClick){
         lastClickTime = new Date().getTime();
         isPausedManually = true;
@@ -55,18 +55,18 @@ $(document).click(function() {
     }
 });
 
-$(document).mousedown(function(){
+document.addEventListener("mousedown", function(){
     lastClickTime = new Date().getTime();
 });
 
-$(document).keydown(function() {
+document.addEventListener("keydown", function() {
     lastClickTime = new Date().getTime();
     isPausedManually = true;
     setTimeout(checkIfPaused, checkIfPausedTime);
 });
 
 function checkIfPaused(){
-    if(!$(videoPlayerElement).hasClass("paused-mode")){
+    if(!document.querySelector(videoPlayerElement).classList.contains("paused-mode")){
         isPausedManually = false;
     }
 }
@@ -111,14 +111,14 @@ let documentObserver = new MutationObserver(function(mutations, observer){
     }
 });
 
-documentObserver.observe($(document)[0], {
+documentObserver.observe(document, {
     childList: true,
     subtree: true
 });
 
 function tryObserveVideoPlayer(){
-    if($(videoPlayerElement).length){
-        videoPlayerObserver.observe($(videoPlayerElement)[0], {
+    if(document.querySelectorAll(videoPlayerElement).length){
+        videoPlayerObserver.observe(document.querySelectorAll(videoPlayerElement)[0], {
             attributeFilter: ["class"]
         });
         debug("Observing video player!");
@@ -134,8 +134,8 @@ function tryObserveVideoPlayer(){
 }
 
 function tryObserveDialog(){
-    if($(dialogElement).length){
-        dialogObserver.observe($(dialogElement)[0], {
+    if(document.querySelectorAll(dialogElement).length){
+        dialogObserver.observe(document.querySelectorAll(dialogElement)[0], {
             attributeFilter: ["style"]
         });
         debug("Observing confirm dialog!");
@@ -151,31 +151,31 @@ function tryObserveDialog(){
 }
 
 function tryClickVideoPlayer(){
-	if($(videoPlayerElement).hasClass("paused-mode") && !videoActed){
+	if(document.querySelector(videoPlayerElement).classList.contains("paused-mode") && !videoActed){
         if(!hasPoppedAfterTimeThreshold()){
             return;
         }
         fakeClick = true;
-        $(unpauseElement).click();
+        document.querySelector(unpauseElement).click();
         videoActed = true;
         setTimeout(function(){
             videoActed = false;
         }, resetActedTime);
-        debug(getTimestamp() + " " + $("head title").html() + " Detected paused video and clicked it to continue!");
+        debug(getTimestamp() + " " + document.querySelector("head title").innerHTML + " Detected paused video and clicked it to continue!");
     }
 }
 
 function tryClickDialog(){
-	if($(dialogElement).css('display') !== 'none' && !dialogActed){
+	if(document.querySelector(dialogElement).style.display !== 'none' && !dialogActed){
         if(!hasPoppedAfterTimeThreshold()){
             return;
         }
         fakeClick = true;
-        $(dialogElement).find("yt-button-renderer[dialog-confirm]").click();
+        document.querySelector(dialogElement).querySelector("yt-button-renderer[dialog-confirm]").click();
         dialogActed = true;
         setTimeout(function(){
             dialogActed = false;
         }, resetActedTime);
-        debug(getTimestamp() + " " + $("head title").html() + " Confirmed watching in dialog!");
+        debug(getTimestamp() + " " + document.querySelector("head title").innerHTML  + " Confirmed watching in dialog!");
     }
 }
