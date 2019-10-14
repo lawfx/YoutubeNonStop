@@ -29,11 +29,11 @@ const MutationObserver =
   window.MutationObserver || window.WebKitMutationObserver;
 
 function log(message) {
-  console.log(ynsTag + ' ' + message);
+  console.log(`${ynsTag} ${message}`);
 }
 
 function debug(message) {
-  console.debug(ynsTag + ' ' + message);
+  console.debug(`${ynsTag} ${message}`);
 }
 
 function getTimestamp() {
