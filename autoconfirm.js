@@ -15,9 +15,11 @@ let isPausedManually = false;
 const videoPlayerElement = '.html5-video-player';
 let dialogElement;
 let unpauseElement;
-if (window.location.hostname === 'music.youtube.com') {
+const isYoutubeMusic = window.location.hostname === 'music.youtube.com';
+if (isYoutubeMusic) {
   unpauseElement = '.ytp-unmute';
   dialogElement = 'ytmusic-popup-container';
+  isYoutubeMusic = false;
 } else {
   unpauseElement = 'video';
   dialogElement = 'ytd-popup-container';
@@ -44,7 +46,7 @@ function getTimestamp() {
 
 log("Monitoring YouTube for 'Confirm watching?' action...");
 
-document.addEventListener('click', function() {
+document.addEventListener('click', () => {
   if (!fakeClick) {
     lastClickTime = new Date().getTime();
     isPausedManually = true;
@@ -54,11 +56,11 @@ document.addEventListener('click', function() {
   }
 });
 
-document.addEventListener('mousedown', function() {
+document.addEventListener('mousedown', () => {
   lastClickTime = new Date().getTime();
 });
 
-document.addEventListener('keydown', function() {
+document.addEventListener('keydown', () => {
   lastClickTime = new Date().getTime();
   isPausedManually = true;
   setTimeout(checkIfPaused, checkIfPausedTime);
@@ -75,7 +77,7 @@ function checkIfPaused() {
 }
 
 function hasPoppedAfterTimeThreshold() {
-  var currTime = new Date().getTime();
+  let currTime = new Date().getTime();
   if (currTime - lastClickTime <= considerIdleTime || isPausedManually) {
     lastClickTime = new Date().getTime();
     return false;
@@ -83,7 +85,7 @@ function hasPoppedAfterTimeThreshold() {
   return true;
 }
 
-let videoPlayerObserver = new MutationObserver(function(mutations, observer) {
+let videoPlayerObserver = new MutationObserver((mutations, observer) => {
   if (document.hidden) {
     tryClickVideoPlayer();
   } else {
@@ -91,11 +93,11 @@ let videoPlayerObserver = new MutationObserver(function(mutations, observer) {
   }
 });
 
-let dialogObserver = new MutationObserver(function(mutations, observer) {
+let dialogObserver = new MutationObserver((mutations, observer) => {
   setTimeout(tryClickDialog, tryClickTime * 2);
 });
 
-let documentObserver = new MutationObserver(function(mutations, observer) {
+let documentObserver = new MutationObserver((mutations, observer) => {
   if (!observingVideo) {
     videoPlayerObserver.disconnect();
     if (tryObserveVideoPlayer()) {
@@ -166,9 +168,7 @@ function tryClickVideoPlayer() {
     fakeClick = true;
     document.querySelector(unpauseElement).click();
     videoActed = true;
-    setTimeout(function() {
-      videoActed = false;
-    }, resetActedTime);
+    setTimeout(() => (videoActed = false), resetActedTime);
     debug(
       getTimestamp() +
         ' ' +
@@ -192,9 +192,7 @@ function tryClickDialog() {
       .querySelector('yt-button-renderer[dialog-confirm]')
       .click();
     dialogActed = true;
-    setTimeout(function() {
-      dialogActed = false;
-    }, resetActedTime);
+    setTimeout(() => (dialogActed = false), resetActedTime);
     debug(
       getTimestamp() +
         ' ' +
