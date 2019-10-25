@@ -1,32 +1,21 @@
-//https://www.youtube.com/watch?v=XukwvHZTqPk&t=5769 triggers the popup - link might be dead after a while
-
-const ynsTag = '[Youtube NonStop v0.6.0]';
+const ynsTag = `[Youtube NonStop v${chrome.runtime.getManifest().version}]`;
+const isYoutubeMusic = window.location.hostname === 'music.youtube.com';
 const considerIdleTime = 3000; //time to pass without interaction to consider the page idle
 const resetActedTime = 1000; //time to pass to reconsider unpausing again
 const checkIfPausedTime = 1000; //timeout time to check if the video is paused after interaction
 const tryClickTime = 500; //timeout time to make sure the unpausing takes place after events are fired
+let isHoldingMouseDown = false; //to avoid taking action when mouse is being held down
 let lastClickTime = new Date().getTime();
-let fakeClick = false;
 let dialogActed = false;
 let videoActed = false;
 let observingVideo = false;
 let observingDialog = false;
 let isPausedManually = false;
-const videoPlayerElement = '.html5-video-player';
-let dialogElement;
-let unpauseElement;
-const isYoutubeMusic = window.location.hostname === 'music.youtube.com';
-if (isYoutubeMusic) {
-  unpauseElement = '.ytp-unmute';
-  dialogElement = 'ytmusic-popup-container';
-  isYoutubeMusic = false;
-} else {
-  unpauseElement = 'video';
-  dialogElement = 'ytd-popup-container';
-}
-dialogElement += ' paper-dialog';
-let informedVideo = false;
-let informedDialog = false;
+const videoPlayerElement = '.html5-video-player'; //the element that changes the -mode, playing-mode <-> paused-mode
+let confirmDialogElement = 'yt-confirm-dialog-renderer'; //the element that contains the confirm dialog
+let unpauseElement = isYoutubeMusic ? '.ytp-unmute' : 'video'; //the element to click to unpause the video
+let informedAboutSearchingForVideo = false;
+let informedAboutSearchingForDialog = false;
 const MutationObserver =
   window.MutationObserver || window.WebKitMutationObserver;
 
@@ -44,26 +33,38 @@ function getTimestamp() {
   return time;
 }
 
-log("Monitoring YouTube for 'Confirm watching?' action...");
+log(
+  `Monitoring YouTube ${
+    isYoutubeMusic ? 'Music ' : ''
+  }for 'Confirm watching?' action...`
+);
 
-document.addEventListener('click', () => {
-  if (!fakeClick) {
+document.addEventListener('click', e => {
+  if (e.isTrusted) {
     lastClickTime = new Date().getTime();
     isPausedManually = true;
     setTimeout(checkIfPaused, checkIfPausedTime);
-  } else {
-    fakeClick = false;
   }
 });
 
-document.addEventListener('mousedown', () => {
-  lastClickTime = new Date().getTime();
+document.addEventListener('mousedown', e => {
+  if (e.isTrusted) {
+    isHoldingMouseDown = true;
+  }
 });
 
-document.addEventListener('keydown', () => {
-  lastClickTime = new Date().getTime();
-  isPausedManually = true;
-  setTimeout(checkIfPaused, checkIfPausedTime);
+document.addEventListener('mouseup', e => {
+  if (e.isTrusted) {
+    isHoldingMouseDown = false;
+  }
+});
+
+document.addEventListener('keydown', e => {
+  if (e.isTrusted) {
+    lastClickTime = new Date().getTime();
+    isPausedManually = true;
+    setTimeout(checkIfPaused, checkIfPausedTime);
+  }
 });
 
 function checkIfPaused() {
@@ -76,9 +77,13 @@ function checkIfPaused() {
   }
 }
 
-function hasPoppedAfterTimeThreshold() {
+function hasHappenedAfterTimeThreshold() {
   let currTime = new Date().getTime();
-  if (currTime - lastClickTime <= considerIdleTime || isPausedManually) {
+  if (
+    currTime - lastClickTime <= considerIdleTime ||
+    isPausedManually ||
+    isHoldingMouseDown
+  ) {
     lastClickTime = new Date().getTime();
     return false;
   }
@@ -131,28 +136,30 @@ function tryObserveVideoPlayer() {
     debug('Observing video player!');
     return true;
   } else {
-    if (!informedVideo) {
+    if (!informedAboutSearchingForVideo) {
       debug('Searching for video player...');
-      informedVideo = true;
+      informedAboutSearchingForVideo = true;
     }
     return false;
   }
 }
 
 function tryObserveDialog() {
-  if (document.querySelectorAll(dialogElement).length) {
-    dialogObserver.observe(document.querySelectorAll(dialogElement)[0], {
-      attributeFilter: ['style']
-    });
+  const el = document.querySelectorAll(confirmDialogElement);
+  if (el.length === 1) {
+    dialogObserver.observe(el[0].parentElement, { attributeFilter: ['style'] }); //we want to observe the paper-dialog
     debug('Observing confirm dialog!');
     return true;
+  } else if (el.length > 1) {
+    debug('YouTube changed something in the dialogs...better take a look!');
   } else {
-    if (!informedDialog) {
+    if (!informedAboutSearchingForDialog) {
+      //this is to display the message just once
       debug('Searching for confirm dialog...');
-      informedDialog = true;
+      informedAboutSearchingForDialog = true;
     }
-    return false;
   }
+  return false;
 }
 
 function tryClickVideoPlayer() {
@@ -162,10 +169,9 @@ function tryClickVideoPlayer() {
       .classList.contains('paused-mode') &&
     !videoActed
   ) {
-    if (!hasPoppedAfterTimeThreshold()) {
+    if (!hasHappenedAfterTimeThreshold()) {
       return;
     }
-    fakeClick = true;
     document.querySelector(unpauseElement).click();
     videoActed = true;
     setTimeout(() => (videoActed = false), resetActedTime);
@@ -180,15 +186,15 @@ function tryClickVideoPlayer() {
 
 function tryClickDialog() {
   if (
-    document.querySelector(dialogElement).style.display !== 'none' &&
+    document.querySelector(confirmDialogElement).parentElement.style.display !==
+      'none' &&
     !dialogActed
   ) {
-    if (!hasPoppedAfterTimeThreshold()) {
+    if (!hasHappenedAfterTimeThreshold()) {
       return;
     }
-    fakeClick = true;
     document
-      .querySelector(dialogElement)
+      .querySelector(confirmDialogElement)
       .querySelector('yt-button-renderer[dialog-confirm]')
       .click();
     dialogActed = true;
