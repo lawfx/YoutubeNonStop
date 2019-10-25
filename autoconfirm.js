@@ -68,11 +68,8 @@ document.addEventListener('keydown', e => {
 });
 
 function checkIfPaused() {
-  if (
-    !document
-      .querySelector(videoPlayerElement)
-      .classList.contains('paused-mode')
-  ) {
+  const el = document.querySelector(videoPlayerElement);
+  if (el !== null && !el.classList.contains('paused-mode')) {
     isPausedManually = false;
   }
 }
