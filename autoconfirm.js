@@ -2,7 +2,7 @@ const ynsTag = `[Youtube NonStop v${chrome.runtime.getManifest().version}]`;
 const isYoutubeMusic = window.location.hostname === 'music.youtube.com';
 const considerIdleTime = 3000; //time to pass without interaction to consider the page idle
 const resetActedTime = 1000; //time to pass to reconsider unpausing again
-const checkIfPausedTime = 1000; //timeout time to check if the video is paused after interaction
+const checkIfPausedTime = 2000; //timeout time to check if the video is paused after interaction
 const tryClickTime = 500; //timeout time to make sure the unpausing takes place after events are fired
 let isHoldingMouseDown = false; //to avoid taking action when mouse is being held down
 let lastClickTime = new Date().getTime();
@@ -70,7 +70,9 @@ document.addEventListener('keydown', e => {
 
 function checkIfPaused() {
   const el = document.querySelector(videoPlayerElement);
+  debug('Checking if video is paused after user action...');
   if (el !== null && !el.classList.contains('paused-mode')) {
+    debug('Found not paused...');
     isPausedManually = false;
   }
 }
