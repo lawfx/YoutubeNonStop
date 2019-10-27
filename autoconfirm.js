@@ -2,7 +2,7 @@ const ynsTag = `[Youtube NonStop v${chrome.runtime.getManifest().version}]`;
 const isYoutubeMusic = window.location.hostname === 'music.youtube.com';
 const considerIdleTime = 3000; //time to pass without interaction to consider the page idle
 const resetActedTime = 1000; //time to pass to reconsider unpausing again
-const checkIfPausedTime = 1000; //timeout time to check if the video is paused after interaction
+const checkIfPausedTime = 2000; //timeout time to check if the video is paused after interaction
 const tryClickTime = 500; //timeout time to make sure the unpausing takes place after events are fired
 let isHoldingMouseDown = false; //to avoid taking action when mouse is being held down
 let lastClickTime = new Date().getTime();
@@ -50,6 +50,7 @@ document.addEventListener('click', e => {
 document.addEventListener('mousedown', e => {
   if (e.isTrusted) {
     isHoldingMouseDown = true;
+    setTimeout(() => (isHoldingMouseDown = false), 10000); //as a last resort because depending on the action of the user the mouseup might not get fired
   }
 });
 
@@ -69,13 +70,19 @@ document.addEventListener('keydown', e => {
 
 function checkIfPaused() {
   const el = document.querySelector(videoPlayerElement);
+  debug('Checking if video is paused after user action...');
   if (el !== null && !el.classList.contains('paused-mode')) {
+    debug('Found not paused...');
     isPausedManually = false;
   }
 }
 
 function hasHappenedAfterTimeThreshold() {
   let currTime = new Date().getTime();
+  debug(
+    `\ntime passed: ${currTime -
+      lastClickTime}\npausedManually: ${isPausedManually}\nholdingMouse: ${isHoldingMouseDown}`
+  );
   if (
     currTime - lastClickTime <= considerIdleTime ||
     isPausedManually ||
@@ -166,18 +173,14 @@ function tryClickVideoPlayer() {
       .classList.contains('paused-mode') &&
     !videoActed
   ) {
+    debug('Detected video paused!');
     if (!hasHappenedAfterTimeThreshold()) {
       return;
     }
     document.querySelector(unpauseElement).click();
     videoActed = true;
     setTimeout(() => (videoActed = false), resetActedTime);
-    debug(
-      getTimestamp() +
-        ' ' +
-        document.querySelector('head title').innerHTML +
-        ' Detected paused video and clicked it to continue!'
-    );
+    debug('Clicked video!');
   }
 }
 
@@ -187,6 +190,7 @@ function tryClickDialog() {
       'none' &&
     !dialogActed
   ) {
+    debug('Detected confirm dialog!');
     if (!hasHappenedAfterTimeThreshold()) {
       return;
     }
@@ -196,11 +200,6 @@ function tryClickDialog() {
       .click();
     dialogActed = true;
     setTimeout(() => (dialogActed = false), resetActedTime);
-    debug(
-      getTimestamp() +
-        ' ' +
-        document.querySelector('head title').innerHTML +
-        ' Confirmed watching in dialog!'
-    );
+    debug('Clicked dialog!');
   }
 }
