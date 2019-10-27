@@ -180,12 +180,7 @@ function tryClickVideoPlayer() {
     document.querySelector(unpauseElement).click();
     videoActed = true;
     setTimeout(() => (videoActed = false), resetActedTime);
-    debug(
-      getTimestamp() +
-        ' ' +
-        document.querySelector('head title').innerHTML +
-        ' Detected paused video and clicked it to continue!'
-    );
+    debug('Clicked video!');
   }
 }
 
@@ -205,11 +200,6 @@ function tryClickDialog() {
       .click();
     dialogActed = true;
     setTimeout(() => (dialogActed = false), resetActedTime);
-    debug(
-      getTimestamp() +
-        ' ' +
-        document.querySelector('head title').innerHTML +
-        ' Confirmed watching in dialog!'
-    );
+    debug('Clicked dialog!');
   }
 }
