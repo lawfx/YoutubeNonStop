@@ -50,6 +50,7 @@ document.addEventListener('click', e => {
 document.addEventListener('mousedown', e => {
   if (e.isTrusted) {
     isHoldingMouseDown = true;
+    setTimeout(() => (isHoldingMouseDown = false), 10000); //as a last resort because depending on the action of the user the mouseup might not get fired
   }
 });
 
@@ -76,6 +77,10 @@ function checkIfPaused() {
 
 function hasHappenedAfterTimeThreshold() {
   let currTime = new Date().getTime();
+  debug(
+    `\ntime passed: ${currTime -
+      lastClickTime}\npausedManually: ${isPausedManually}\nholdingMouse: ${isHoldingMouseDown}`
+  );
   if (
     currTime - lastClickTime <= considerIdleTime ||
     isPausedManually ||
@@ -166,6 +171,7 @@ function tryClickVideoPlayer() {
       .classList.contains('paused-mode') &&
     !videoActed
   ) {
+    debug('Detected video paused!');
     if (!hasHappenedAfterTimeThreshold()) {
       return;
     }
@@ -187,6 +193,7 @@ function tryClickDialog() {
       'none' &&
     !dialogActed
   ) {
+    debug('Detected confirm dialog!');
     if (!hasHappenedAfterTimeThreshold()) {
       return;
     }
