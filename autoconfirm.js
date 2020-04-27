@@ -5,7 +5,7 @@ const resetActedTime = 1000; //time to pass to reconsider unpausing again
 const checkIfPausedTime = 2000; //timeout time to check if the video is paused after interaction
 const tryClickTime = 500; //timeout time to make sure the unpausing takes place after events are fired
 let isHoldingMouseDown = false; //to avoid taking action when mouse is being held down
-let lastClickTime = new Date().getTime();
+let lastClickTime;
 let dialogActed = false;
 let videoActed = false;
 let observingVideo = false;
@@ -27,11 +27,14 @@ function debug(message) {
   console.debug(`${ynsTag} ${message}`);
 }
 
-function getTimestamp() {
-  let dt = new Date();
-  let time = dt.getHours() + ':' + dt.getMinutes() + ':' + dt.getSeconds();
-  return time;
+function getMilliseconds() {
+  return +new Date();
 }
+
+function updateLastClickTime() {
+  lastClickTime = getMilliseconds();
+}
+updateLastClickTime();
 
 log(
   `Monitoring YouTube ${
@@ -41,7 +44,7 @@ log(
 
 document.addEventListener('click', e => {
   if (e.isTrusted) {
-    lastClickTime = new Date().getTime();
+    updateLastClickTime();
     isPausedManually = true;
     setTimeout(checkIfPaused, checkIfPausedTime);
   }
@@ -62,7 +65,7 @@ document.addEventListener('mouseup', e => {
 
 document.addEventListener('keydown', e => {
   if (e.isTrusted) {
-    lastClickTime = new Date().getTime();
+    updateLastClickTime();
     isPausedManually = true;
     setTimeout(checkIfPaused, checkIfPausedTime);
   }
@@ -78,7 +81,7 @@ function checkIfPaused() {
 }
 
 function hasHappenedAfterTimeThreshold() {
-  let currTime = new Date().getTime();
+  let currTime = getMilliseconds();
   debug(
     `\ntime passed: ${currTime -
       lastClickTime}\npausedManually: ${isPausedManually}\nholdingMouse: ${isHoldingMouseDown}`
@@ -88,13 +91,13 @@ function hasHappenedAfterTimeThreshold() {
     isPausedManually ||
     isHoldingMouseDown
   ) {
-    lastClickTime = new Date().getTime();
+    updateLastClickTime();
     return false;
   }
   return true;
 }
 
-let videoPlayerObserver = new MutationObserver((mutations, observer) => {
+let videoPlayerObserver = new MutationObserver(() => {
   if (document.hidden) {
     tryClickVideoPlayer();
   } else {
@@ -102,11 +105,11 @@ let videoPlayerObserver = new MutationObserver((mutations, observer) => {
   }
 });
 
-let dialogObserver = new MutationObserver((mutations, observer) => {
+let dialogObserver = new MutationObserver(() => {
   setTimeout(tryClickDialog, tryClickTime * 2);
 });
 
-let documentObserver = new MutationObserver((mutations, observer) => {
+let documentObserver = new MutationObserver(() => {
   if (!observingVideo) {
     videoPlayerObserver.disconnect();
     if (tryObserveVideoPlayer()) {
