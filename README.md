@@ -11,7 +11,9 @@ Available for:
 [Firefox](https://addons.mozilla.org/en-US/firefox/addon/youtube-nonstop/) <a href="https://addons.mozilla.org/en-US/firefox/addon/youtube-nonstop/">
 <img src="https://github.com/lawfx/YoutubeNonStop/blob/master/images/firefox_logo.png" width="25" height="25" /></a>
 
-Opera...eventually...I hope...who knows...awaiting moderation for over a million years now...
+For Opera install this extension first https://addons.opera.com/en/extensions/details/install-chrome-extensions/ and then install YouTube NonStop from the Chrome store.
+
+---
 
 If you feel like supporting this project you can buy me a :coffee: or a :beer: :
 

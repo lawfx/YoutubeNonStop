@@ -1,36 +1,202 @@
 const ynsTag = `[Youtube NonStop v${chrome.runtime.getManifest().version}]`;
 const isYoutubeMusic = window.location.hostname === 'music.youtube.com';
-const considerIdleTime = 3000; //time to pass without interaction to consider the page idle
-const resetActedTime = 1000; //time to pass to reconsider unpausing again
-const checkIfPausedTime = 2000; //timeout time to check if the video is paused after interaction
-const tryClickTime = 500; //timeout time to make sure the unpausing takes place after events are fired
+const checkIfPausedTimeout = 2000; //timeout time to check if the video is paused after interaction
+const idleTimeout = 3000; //time to pass without interaction to consider the page idle
+const resetActedTime = 1000; //to avoid spamming clicks on the dialog
+let lastInteractionTime = new Date().getTime();
+let hasActedOnDialog = false;
+let videoElement = null;
+let isPausedByUser = false;
+let documentObserver = null;
 let isHoldingMouseDown = false; //to avoid taking action when mouse is being held down
-let lastClickTime = new Date().getTime();
-let dialogActed = false;
-let videoActed = false;
-let observingVideo = false;
-let observingDialog = false;
-let isPausedManually = false;
-const videoPlayerElement = '.html5-video-player'; //the element that changes the -mode, playing-mode <-> paused-mode
-let confirmDialogElement = 'yt-confirm-dialog-renderer'; //the element that contains the confirm dialog
-let unpauseElement = isYoutubeMusic ? '.ytp-unmute' : 'video'; //the element to click to unpause the video
-let informedAboutSearchingForVideo = false;
-let informedAboutSearchingForDialog = false;
+let confirmDialogElement = isYoutubeMusic
+  ? 'ytmusic-you-there-renderer'
+  : 'yt-confirm-dialog-renderer'; //the element that contains the confirm dialog
+let isObservingDialog = false;
+let dialogObserver = null;
+
 const MutationObserver =
   window.MutationObserver || window.WebKitMutationObserver;
-
-function log(message) {
-  console.log(`${ynsTag} ${message}`);
-}
-
-function debug(message) {
-  console.debug(`${ynsTag} ${message}`);
-}
 
 function getTimestamp() {
   let dt = new Date();
   let time = dt.getHours() + ':' + dt.getMinutes() + ':' + dt.getSeconds();
   return time;
+}
+
+function log(message) {
+  console.log(`${ynsTag}[${getTimestamp()}] ${message}`);
+}
+
+function debug(message) {
+  console.debug(`${ynsTag}[${getTimestamp()}] ${message}`);
+}
+
+/* INTERACTION LISTENERS */
+
+function listenForMediaKeys() {
+  if (navigator.mediaSession === undefined) {
+    log("Your browser doesn't seem to support navigator.mediaSession yet :/");
+    return;
+  }
+  log('Listening for media keys...');
+  navigator.mediaSession.setActionHandler('pause', () => {
+    lastInteractionTime = new Date().getTime();
+    isPausedByUser = true;
+    if (videoElement !== null) {
+      videoElement.pause();
+    }
+  });
+
+  navigator.mediaSession.setActionHandler('play', () => {
+    lastInteractionTime = new Date().getTime();
+    if (videoElement !== null) {
+      videoElement.play();
+    }
+  });
+}
+
+function listenForMouse() {
+  document.addEventListener('click', (e) => {
+    if (e.isTrusted) {
+      lastInteractionTime = new Date().getTime();
+      isPausedByUser = true;
+      setTimeout(resetInteractionIfNotPaused, checkIfPausedTimeout);
+    }
+  });
+
+  document.addEventListener('mousedown', (e) => {
+    if (e.isTrusted) {
+      isHoldingMouseDown = true;
+      setTimeout(() => (isHoldingMouseDown = false), 10000); //as a last resort because depending on the action of the user the mouseup might not get fired
+    }
+  });
+
+  document.addEventListener('mouseup', (e) => {
+    if (e.isTrusted) {
+      isHoldingMouseDown = false;
+    }
+  });
+}
+
+function listenForKeyboard() {
+  document.addEventListener('keydown', (e) => {
+    if (e.isTrusted) {
+      lastInteractionTime = new Date().getTime();
+      isPausedByUser = true;
+      setTimeout(resetInteractionIfNotPaused, checkIfPausedTimeout);
+    }
+  });
+}
+
+function isIdle() {
+  let currTime = new Date().getTime();
+  debug(
+    `\ntime passed: ${
+      currTime - lastInteractionTime
+    }\nisPausedByUser: ${isPausedByUser}\nisHoldingMouseDown: ${isHoldingMouseDown}`
+  );
+  if (
+    currTime - lastInteractionTime <= idleTimeout ||
+    isPausedByUser ||
+    isHoldingMouseDown
+  ) {
+    lastInteractionTime = new Date().getTime();
+    return false;
+  }
+  return true;
+}
+
+function resetInteractionIfNotPaused() {
+  if (videoElement == null) return;
+  if (!videoElement.paused) {
+    isPausedByUser = false;
+  }
+}
+
+/* ACTIONS */
+
+function clickDialog() {
+  if (
+    document.querySelector(confirmDialogElement).parentElement.style.display !==
+      'none' &&
+    !hasActedOnDialog
+  ) {
+    debug('Detected confirm dialog');
+    if (!isIdle()) return;
+
+    document
+      .querySelector(confirmDialogElement)
+      .querySelector('yt-button-renderer[dialog-confirm]')
+      .click();
+    hasActedOnDialog = true;
+    setTimeout(() => (hasActedOnDialog = false), resetActedTime);
+    debug('Clicked dialog!');
+  }
+}
+
+function unpauseVideo() {
+  if (!isIdle()) return;
+
+  videoElement.play();
+  debug('Unpaused video!');
+}
+
+/* OBSERVERS */
+
+function observeElements() {
+  documentObserver = new MutationObserver((mutations, observer) => {
+    observeVideoElement();
+    observeDialog();
+    if (videoElement !== null && isObservingDialog) {
+      documentObserver.disconnect();
+    }
+  });
+
+  documentObserver.observe(document, {
+    childList: true,
+    subtree: true,
+  });
+}
+
+function observeDialog() {
+  if (dialogObserver == null) {
+    dialogObserver = new MutationObserver((mutations, observer) => {
+      clickDialog();
+    });
+  }
+
+  if (!isObservingDialog) {
+    const el = document.querySelectorAll(confirmDialogElement);
+    if (el.length === 1) {
+      dialogObserver.observe(el[0].parentElement, {
+        attributeFilter: ['style'],
+      }); //we want to observe the paper-dialog
+      debug('Monitoring confirmation dialog...');
+      isObservingDialog = true;
+    } else if (el.length > 1) {
+      log(
+        'YouTube changed something in the dialogs...!\nIf you see this message, contact the developer at ioannounikosdev@gmail.com'
+      );
+    }
+  }
+}
+
+function observeVideoElement() {
+  if (videoElement !== null) return;
+  if (document.querySelector('video') !== null) {
+    videoElement = document.querySelector('video');
+    listenForMediaKeys();
+    log('Monitoring video for pauses...');
+    videoElement.onpause = () => {
+      if (videoElement.ended) return;
+      debug('Detected paused video');
+      unpauseVideo();
+    };
+    videoElement.onplay = () => {
+      isPausedByUser = false;
+    };
+  }
 }
 
 log(
@@ -39,167 +205,7 @@ log(
   }for 'Confirm watching?' action...`
 );
 
-document.addEventListener('click', e => {
-  if (e.isTrusted) {
-    lastClickTime = new Date().getTime();
-    isPausedManually = true;
-    setTimeout(checkIfPaused, checkIfPausedTime);
-  }
-});
+listenForMouse();
+listenForKeyboard();
 
-document.addEventListener('mousedown', e => {
-  if (e.isTrusted) {
-    isHoldingMouseDown = true;
-    setTimeout(() => (isHoldingMouseDown = false), 10000); //as a last resort because depending on the action of the user the mouseup might not get fired
-  }
-});
-
-document.addEventListener('mouseup', e => {
-  if (e.isTrusted) {
-    isHoldingMouseDown = false;
-  }
-});
-
-document.addEventListener('keydown', e => {
-  if (e.isTrusted) {
-    lastClickTime = new Date().getTime();
-    isPausedManually = true;
-    setTimeout(checkIfPaused, checkIfPausedTime);
-  }
-});
-
-function checkIfPaused() {
-  const el = document.querySelector(videoPlayerElement);
-  debug('Checking if video is paused after user action...');
-  if (el !== null && !el.classList.contains('paused-mode')) {
-    debug('Found not paused...');
-    isPausedManually = false;
-  }
-}
-
-function hasHappenedAfterTimeThreshold() {
-  let currTime = new Date().getTime();
-  debug(
-    `\ntime passed: ${currTime -
-      lastClickTime}\npausedManually: ${isPausedManually}\nholdingMouse: ${isHoldingMouseDown}`
-  );
-  if (
-    currTime - lastClickTime <= considerIdleTime ||
-    isPausedManually ||
-    isHoldingMouseDown
-  ) {
-    lastClickTime = new Date().getTime();
-    return false;
-  }
-  return true;
-}
-
-let videoPlayerObserver = new MutationObserver((mutations, observer) => {
-  if (document.hidden) {
-    tryClickVideoPlayer();
-  } else {
-    setTimeout(tryClickVideoPlayer, tryClickTime);
-  }
-});
-
-let dialogObserver = new MutationObserver((mutations, observer) => {
-  setTimeout(tryClickDialog, tryClickTime * 2);
-});
-
-let documentObserver = new MutationObserver((mutations, observer) => {
-  if (!observingVideo) {
-    videoPlayerObserver.disconnect();
-    if (tryObserveVideoPlayer()) {
-      observingVideo = true;
-    }
-  }
-  if (!observingDialog) {
-    dialogObserver.disconnect();
-    if (tryObserveDialog()) {
-      observingDialog = true;
-    }
-  }
-  if (observingVideo && observingDialog) {
-    documentObserver.disconnect();
-  }
-});
-
-documentObserver.observe(document, {
-  childList: true,
-  subtree: true
-});
-
-function tryObserveVideoPlayer() {
-  if (document.querySelectorAll(videoPlayerElement).length) {
-    videoPlayerObserver.observe(
-      document.querySelectorAll(videoPlayerElement)[0],
-      {
-        attributeFilter: ['class']
-      }
-    );
-    debug('Observing video player!');
-    return true;
-  } else {
-    if (!informedAboutSearchingForVideo) {
-      debug('Searching for video player...');
-      informedAboutSearchingForVideo = true;
-    }
-    return false;
-  }
-}
-
-function tryObserveDialog() {
-  const el = document.querySelectorAll(confirmDialogElement);
-  if (el.length === 1) {
-    dialogObserver.observe(el[0].parentElement, { attributeFilter: ['style'] }); //we want to observe the paper-dialog
-    debug('Observing confirm dialog!');
-    return true;
-  } else if (el.length > 1) {
-    debug('YouTube changed something in the dialogs...better take a look!');
-  } else {
-    if (!informedAboutSearchingForDialog) {
-      //this is to display the message just once
-      debug('Searching for confirm dialog...');
-      informedAboutSearchingForDialog = true;
-    }
-  }
-  return false;
-}
-
-function tryClickVideoPlayer() {
-  if (
-    document
-      .querySelector(videoPlayerElement)
-      .classList.contains('paused-mode') &&
-    !videoActed
-  ) {
-    debug('Detected video paused!');
-    if (!hasHappenedAfterTimeThreshold()) {
-      return;
-    }
-    document.querySelector(unpauseElement).click();
-    videoActed = true;
-    setTimeout(() => (videoActed = false), resetActedTime);
-    debug('Clicked video!');
-  }
-}
-
-function tryClickDialog() {
-  if (
-    document.querySelector(confirmDialogElement).parentElement.style.display !==
-      'none' &&
-    !dialogActed
-  ) {
-    debug('Detected confirm dialog!');
-    if (!hasHappenedAfterTimeThreshold()) {
-      return;
-    }
-    document
-      .querySelector(confirmDialogElement)
-      .querySelector('yt-button-renderer[dialog-confirm]')
-      .click();
-    dialogActed = true;
-    setTimeout(() => (dialogActed = false), resetActedTime);
-    debug('Clicked dialog!');
-  }
-}
+observeElements();
