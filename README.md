@@ -15,18 +15,6 @@ For Opera install this extension first https://addons.opera.com/en/extensions/de
 
 ---
 
-**Known issue**
-
-When pausing the video outside of YouTube's page(e.g. with MediaKeys or from Picture-in-picture, etc) YouTube NonStop has no way of knowing if it was a user action or not, that's why it's unpausing the video.
-
-Work-around steps for that are: 
-1. Pause the video
-2. YouTube NonStop resumes video
-3. Immediately pause again(you have to be kinda fast)
-4. Video remains paused
-
----
-
 If you feel like supporting this project you can buy me a :coffee: or a :beer: :
 
 [![](https://github.com/lawfx/YoutubeNonStop/blob/master/images/donate-paypal.png)](https://www.paypal.me/ioannounikos)
