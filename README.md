@@ -15,12 +15,6 @@ For Opera install this extension first https://addons.opera.com/en/extensions/de
 
 ---
 
-If you feel like supporting this project you can buy me a :coffee: or a :beer: :
-
-[![](https://github.com/lawfx/YoutubeNonStop/blob/master/images/donate-paypal.png)](https://www.paypal.me/ioannounikos)
-
----
-
 If you want to load the extension by yourself in your browser without installing it from store or Google suddenly decides to take action against it, follow the instructions below:
 
 1. Clone or download this repository
