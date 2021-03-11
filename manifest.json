@@ -1,12 +1,17 @@
 {
   "name": "YouTube NonStop",
   "short_name": "YT NonStop",
-  "version": "0.8.2",
+  "version": "0.9.0",
   "description": "Kiss the annoying \"Video paused. Continue watching?\" confirmation goodbye!",
   "content_scripts": [
     {
-      "matches": ["https://www.youtube.com/*", "https://music.youtube.com/*"],
-      "js": ["autoconfirm.js"],
+      "matches": [
+        "https://www.youtube.com/*",
+        "https://music.youtube.com/*"
+      ],
+      "js": [
+        "autoconfirm.js"
+      ],
       "run_at": "document_end"
     }
   ],
